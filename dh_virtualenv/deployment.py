@@ -172,11 +172,16 @@ class Deployment(object):
             fh.write(content)
 
     def install_package(self):
+        source_directory = os.path.abspath(self.sourcedirectory)
         if self.extras:
-            package = '.[{}]'.format(self.extras)
+            # work around https://github.com/pypa/pip/issues/2000
+            package = 'file://{0}#egg={1}[{2}]'.format(
+                source_directory, os.path.basename(source_directory),
+                self.extras)
         else:
             package = '.'
-        subprocess.check_call(self.pip(package), cwd=os.path.abspath(self.sourcedirectory))
+        subprocess.check_call(
+            self.pip(package), cwd=os.path.abspath(source_directory))
 
     def fix_local_symlinks(self):
         # The virtualenv might end up with a local folder that points outside the package
