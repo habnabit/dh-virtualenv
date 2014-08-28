@@ -29,7 +29,8 @@ DEFAULT_INSTALL_DIR = '/usr/share/python/'
 
 class Deployment(object):
     def __init__(self, package, extra_urls=None, preinstall=None, pypi_url=None,
-                 setuptools=False, python=None, builtin_venv=False, sourcedirectory=None, verbose=False):
+                 setuptools=False, python=None, builtin_venv=False, sourcedirectory=None, verbose=False,
+                 upgrade=False):
         self.package = package
         install_root = os.environ.get(ROOT_ENV_KEY, DEFAULT_INSTALL_DIR)
         self.virtualenv_install_dir = os.path.join(install_root, self.package)
@@ -48,6 +49,7 @@ class Deployment(object):
         self.python = python
         self.builtin_venv = builtin_venv
         self.sourcedirectory = '.' if sourcedirectory is None else sourcedirectory
+        self.upgrade = upgrade
 
     @classmethod
     def from_options(cls, package, options):
@@ -60,7 +62,8 @@ class Deployment(object):
                    python=options.python,
                    builtin_venv=options.builtin_venv,
                    sourcedirectory=options.sourcedirectory,
-                   verbose=verbose)
+                   verbose=verbose,
+                   upgrade=options.upgrade)
 
     def clean(self):
         shutil.rmtree(self.debian_root)
@@ -116,7 +119,10 @@ class Deployment(object):
         # along lines of setuptools), but that does not get installed
         # by default virtualenv.
         if self.preinstall:
-            subprocess.check_call(self.pip(*self.preinstall))
+            preinstall = list(self.preinstall)
+            if self.upgrade:
+                preinstall.append('--upgrade')
+            subprocess.check_call(self.pip(*preinstall))
 
         requirements_path = os.path.join(self.sourcedirectory, 'requirements.txt')
         if os.path.exists(requirements_path):
