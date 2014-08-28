@@ -59,6 +59,7 @@ def get_default_parser():
                       default=[])
     parser.add_option('--upgrade', action='store_true', default=False,
                       help='Upgrade installed packages during a preinstall.')
+    parser.add_option('--extras', help='Which extras, if any, to install.')
     parser.add_option('--pypi-url', help='Base URL of the PyPI server')
     parser.add_option('--python', help='The Python to use')
     parser.add_option('--builtin-venv', action='store_true',

@@ -30,7 +30,7 @@ DEFAULT_INSTALL_DIR = '/usr/share/python/'
 class Deployment(object):
     def __init__(self, package, extra_urls=None, preinstall=None, pypi_url=None,
                  setuptools=False, python=None, builtin_venv=False, sourcedirectory=None, verbose=False,
-                 upgrade=False):
+                 upgrade=False, extras=None):
         self.package = package
         install_root = os.environ.get(ROOT_ENV_KEY, DEFAULT_INSTALL_DIR)
         self.virtualenv_install_dir = os.path.join(install_root, self.package)
@@ -50,6 +50,7 @@ class Deployment(object):
         self.builtin_venv = builtin_venv
         self.sourcedirectory = '.' if sourcedirectory is None else sourcedirectory
         self.upgrade = upgrade
+        self.extras = extras
 
     @classmethod
     def from_options(cls, package, options):
@@ -63,7 +64,8 @@ class Deployment(object):
                    builtin_venv=options.builtin_venv,
                    sourcedirectory=options.sourcedirectory,
                    verbose=verbose,
-                   upgrade=options.upgrade)
+                   upgrade=options.upgrade,
+                   extras=options.extras)
 
     def clean(self):
         shutil.rmtree(self.debian_root)
@@ -170,7 +172,11 @@ class Deployment(object):
             fh.write(content)
 
     def install_package(self):
-        subprocess.check_call(self.pip('.'), cwd=os.path.abspath(self.sourcedirectory))
+        if self.extras:
+            package = '.[{}]'.format(self.extras)
+        else:
+            package = '.'
+        subprocess.check_call(self.pip(package), cwd=os.path.abspath(self.sourcedirectory))
 
     def fix_local_symlinks(self):
         # The virtualenv might end up with a local folder that points outside the package
